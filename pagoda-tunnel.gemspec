@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "pagoda-tunnel/version"
+require "pagoda-tunnel"
 
 Gem::Specification.new do |s|
   s.name        = "pagoda-tunnel"

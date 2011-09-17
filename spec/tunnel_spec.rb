@@ -1,13 +1,9 @@
 require 'pagoda-tunnel'
 
-class Tun
-  include Pagoda::Tunnel
-end
 describe Pagoda::Tunnel do
 
-
-  it "does something" do
-    Tun.new.something.should == true
+  it "can create a connection" do
+    tunnel = Pagoda::Tunnel.new("")
   end
 
 end
