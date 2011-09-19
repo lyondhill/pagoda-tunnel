@@ -11,7 +11,7 @@ module Pagoda
       @user     = user
       @pass     = pass
       @app      = app
-      @instance = instance 
+      @instance = instance
     end
     
     def start
@@ -26,8 +26,8 @@ module Pagoda
       end
       
       local_port   = 3307
-      remote_host = "tunnel.pagodabox.com"
-      remote_port = 443
+      remote_host = "www.pagodabox.com" # switch to tunnel.pagodabox.com
+      remote_port = 3306 # switch to 443
 
       max_threads     = 20
       threads         = []
@@ -50,10 +50,10 @@ module Pagoda
       puts "Tunnel Established!  Accepting connections on :"
       puts "-----------------------------------------------"
       puts
-      puts "HOST : 127.0.0.1 (or localhost)", true, 2
-      puts "PORT : #{local_port}", true, 2
-      puts "USER : (found in pagodabox dashboard)", true, 2
-      puts "PASS : (found in pagodabox dashboard)", true, 2
+      puts "HOST : 127.0.0.1 (or localhost)"
+      puts "PORT : #{local_port}"
+      puts "USER : (found in pagodabox dashboard)"
+      puts "PASS : (found in pagodabox dashboard)"
       puts
       puts "-----------------------------------------------"
       puts "(note : ctrl-c To close this tunnel)"
@@ -68,8 +68,8 @@ module Pagoda
             begin
               server_socket         = TCPSocket.new(remote_host, remote_port)
               ssl_context           = OpenSSL::SSL::SSLContext.new()  
-              ssl_socket            = OpenSSL::SSL::SSLSocket.new(server_socket, ssl_context)  
-              ssl_socket.sync_close = true  
+              ssl_socket            = OpenSSL::SSL::SSLSocket.new(server_socket, ssl_context)
+              ssl_socket.sync_close = true
               ssl_socket.connect
             rescue Errno::ECONNREFUSED
               # puts "connection refused"
