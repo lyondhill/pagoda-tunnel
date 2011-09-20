@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
 
   # Development
   s.add_development_dependency "rspec"
+  # s.add_development_dependency "simplecov"
+
 
 
   # Production
