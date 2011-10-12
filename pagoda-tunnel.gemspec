@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.version     = Pagoda::Tunnel::VERSION
   s.authors     = ["Lyon"]
   s.email       = ["lyon@delorum.com"]
-  s.homepage    = ""
-  s.summary     = %q{summary}
-  s.description = %q{description}
+  s.homepage    = "http://www.pagodabox.com"
+  s.summary     = %q{Pagodabox Tunnel gem}
+  s.description = %q{Pagodabox container tunnel. Allows users to tunnel into pagodabox db's.}
 
   s.rubyforge_project = "pagoda-tunnel"
 
