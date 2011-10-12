@@ -4,7 +4,7 @@ require 'openssl'
 
 module Pagoda
   class Tunnel
-    VERSION = "0.0.1"
+    VERSION = "0.1.0"
     # Your code goes here...
 
     def initialize(type, user, pass, app, instance, port = 3306)
