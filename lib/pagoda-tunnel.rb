@@ -1,4 +1,5 @@
-require "socket"
+require 'timeout'
+require 'socket'
 require 'openssl'  
 
 module Pagoda
@@ -6,12 +7,37 @@ module Pagoda
     VERSION = "0.0.1"
     # Your code goes here...
 
-    def initialize(type, user, pass, app, instance)
+    def initialize(type, user, pass, app, instance, port = 3306)
       @type     = type
       @user     = user
       @pass     = pass
       @app      = app
       @instance = instance
+      @port     = port
+    end
+
+    def port_available?(ip, port)
+      begin
+        Timeout::timeout(1) do
+          begin
+            s = TCPSocket.new(ip, port)
+            s.close
+            return false
+          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+            return true
+          end
+        end
+      rescue Timeout::Error
+      end
+      return true
+    end
+
+    def next_available_port(start_port)
+      until port_available?("0.0.0.0", start_port)
+        # puts "port #{start_port} was not available"
+        start_port += 1
+      end
+      start_port
     end
     
     def start
@@ -25,25 +51,25 @@ module Pagoda
         end
       end
       
-      local_port   = 3307
-      remote_host = "www.pagodabox.com" # switch to tunnel.pagodabox.com
-      remote_port = 3306 # switch to 443
+      remote_host = "tunnel.pagodabox.com" # switch to tunnel.pagodabox.com
+      remote_port = 443
 
       max_threads     = 20
       threads         = []
 
       chunk           = 4096*4096
 
-      #puts "start TCP server"
-      puts "+> Opening Tunnel"
-      bound = false
-      until bound
-        begin
-          proxy_server = TCPServer.new('0.0.0.0', local_port)
-          bound = true
-        rescue Errno::EADDRINUSE
-          local_port += 1
-        end
+      # puts "start TCP server"
+      # puts "+> Opening Tunnel"
+      @port = next_available_port(@port)
+      retrys = 0
+      begin
+        proxy_server = TCPServer.new('0.0.0.0', @port)
+      rescue Exception => e
+        @port += 1
+        retry if retrys < 4
+        # puts "unable to connect to #{@port}. The algorithm is broken"
+        exit
       end
       
       puts
@@ -51,7 +77,7 @@ module Pagoda
       puts "-----------------------------------------------"
       puts
       puts "HOST : 127.0.0.1 (or localhost)"
-      puts "PORT : #{local_port}"
+      puts "PORT : #{@port}"
       puts "USER : (found in pagodabox dashboard)"
       puts "PASS : (found in pagodabox dashboard)"
       puts
@@ -60,9 +86,8 @@ module Pagoda
       
       loop do
 
-        #puts "start a new thread for every client connection"
+        # puts "start a new thread for every client connection"
         threads << Thread.new(proxy_server.accept) do |client_socket|
-
           begin
             # puts "client connection"
             begin
@@ -80,7 +105,8 @@ module Pagoda
             # puts "authenticate"
             if ssl_socket.readpartial(chunk) == "auth"
               # puts "authentication"
-              ssl_socket.write "auth=#{@user}:#{@pass}:#{@app}:#{@instance}" 
+              # puts "auth=#{@type}:#{@user}:#{@pass}:#{@app}:#{@instance}" 
+              ssl_socket.write "auth=#{@type}:#{@user}:#{@pass}:#{@app}:#{@instance}" 
               if ssl_socket.readpartial(chunk) == "success"
                 # puts "successful connection"
               else
@@ -99,11 +125,11 @@ module Pagoda
                 ready_sockets.each do |socket|
                   data = socket.readpartial(chunk)
                   if socket == client_socket
-                    #puts "SERVER <== CLIENT"
+                    # puts "SERVER <== CLIENT"
                     ssl_socket.write data
                     ssl_socket.flush
                   else
-                    #puts "SERVER ==> CLIENT"
+                    # puts "SERVER ==> CLIENT"
                     client_socket.write data
                     client_socket.flush
                   end
@@ -119,7 +145,7 @@ module Pagoda
           ssl_socket.close rescue StandardError
         end
 
-        #puts "clean up the dead threads, and wait until we have available threads"
+        # puts "clean up the dead threads, and wait until we have available threads"
         threads = threads.select { |thread| thread.alive? ? true : (thread.join; false) }
         while threads.size >= max_threads
           sleep 1
